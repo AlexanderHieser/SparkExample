@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class EventServer {
+	
     private static final Executor SERVER_EXECUTOR = Executors.newSingleThreadExecutor();
     private static final int PORT = 9999;
     private static final String DELIMITER = ":";
@@ -29,7 +30,7 @@ public class EventServer {
     private static String generateEvent() {
         int userNumber = random.nextInt(10);
         String event = random.nextBoolean() ? "login" : "purchase";
-        // In production use a real schema like JSON or protocol buffers
+        
         return String.format("user-%s", userNumber) + DELIMITER + event;
     }
 
@@ -49,7 +50,6 @@ public class EventServer {
             ) {
                 while (true) {
                     String event = eventQueue.take();
-                    System.out.println(String.format("Writing \"%s\" to the socket.", event));
                     out.println(event);
                 }
             } catch (IOException|InterruptedException e) {
