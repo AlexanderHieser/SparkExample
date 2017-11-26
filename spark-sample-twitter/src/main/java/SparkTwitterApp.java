@@ -39,54 +39,51 @@ public class SparkTwitterApp {
 		System.setProperty("twitter4j.oauth.accessToken", accessToken);
 		System.setProperty("twitter4j.oauth.accessTokenSecret", accessTokenSecret);
 
-		
 		SparkConf sparkConf = new SparkConf().setAppName("SparkTwitterSample");
 		sparkConf.setMaster("local[*]");
 
 		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, new Duration(2000));
 		JavaReceiverInputDStream<Status> stream = TwitterUtils.createStream(jssc);
-		
-		//StreamingExamples.setStreamingLogLevels();
-	    // Set logging level if log4j not configured (override by adding log4j.properties to classpath)
-		      Logger.getRootLogger().setLevel(Level.OFF);
-	    
 
-	    JavaDStream<String> words = stream.flatMap(new FlatMapFunction<Status, String>() {
+		// StreamingExamples.setStreamingLogLevels();
+		// Set logging level if log4j not configured (override by adding
+		// log4j.properties to classpath)
+		Logger.getRootLogger().setLevel(Level.OFF);
+
+		JavaDStream<String> words = stream.flatMap(new FlatMapFunction<Status, String>() {
 			public Iterable<String> call(Status arg0) throws Exception {
-			      return Arrays.asList(arg0.getText().split(" "));
+				return Arrays.asList(arg0.getText().split(" "));
 			}
-	      });
+		});
 
-	    JavaDStream<String> hashTags = words.filter(new Function<String, Boolean>() {
+		JavaDStream<String> hashTags = words.filter(new Function<String, Boolean>() {
 
 			public Boolean call(String arg0) throws Exception {
-				// TODO Auto-generated method stub
 				return arg0.startsWith("#");
 			};
-	    	  
-	      });
-	    
 
-	    JavaPairDStream<String, Integer> hashTagCount = hashTags.mapToPair(
-	      new PairFunction<String, String, Integer>() {
-	        @Override
-	        public Tuple2<String, Integer> call(String s) {
-	          // leave out the # character
-	          return new Tuple2<>(s.substring(1), 1);
-	        }
-	      });
-	    
-	    
-	    JavaPairDStream<String, Integer> hashTagTotals = hashTagCount.reduceByKeyAndWindow(
-	    	      new Function2<Integer, Integer, Integer>() {
-	    	        @Override
-	    	        public Integer call(Integer a, Integer b) {
-	    	          return a + b;
-	    	        }
-	    	}, new Duration(10000));
-	    
-	    hashTagCount.print(100);
-	    hashTagTotals.print(100);
+		});
+
+		JavaPairDStream<String, Integer> hashTagCount = hashTags.mapToPair(new PairFunction<String, String, Integer>() {
+			@Override
+			public Tuple2<String, Integer> call(String s) {
+				// # abschneiden
+				return new Tuple2<>(s.substring(1), 1);
+			}
+		});
+
+		JavaPairDStream<String, Integer> hashTagTotals = hashTagCount
+				.reduceByKeyAndWindow(new Function2<Integer, Integer, Integer>() {
+					//Vorkommen addieren
+					@Override
+					public Integer call(Integer a, Integer b) {
+						return a + b;
+					}
+				}, new Duration(10000));
+
+		
+	
+		hashTagTotals.print(100);
 		jssc.start();
 
 		jssc.awaitTermination();
