@@ -21,7 +21,6 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
-import org.apache.spark.api.java.function.VoidFunction;
 
 import twitter4j.Status;
 
@@ -68,7 +67,7 @@ public class SparkTwitterApp {
 			@Override
 			public Tuple2<String, Integer> call(String s) {
 				// # abschneiden
-				return new Tuple2<>(s.substring(1), 1);
+				return new Tuple2<String, Integer>(s.substring(1), 1);
 			}
 		});
 
@@ -81,8 +80,9 @@ public class SparkTwitterApp {
 					}
 				}, new Duration(10000));
 
-		
+		words.print();
 	
+	//	hashTagTotals.dstream().repartition(1).saveAsTextFiles("/home/alex/Desktop/Spark/", "txt");
 		hashTagTotals.print(100);
 		jssc.start();
 
